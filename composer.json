@@ -1,0 +1,10 @@
+{
+	"autoload": {
+		"psr-4": {
+			"Students\\": "app/"
+		}
+	},
+	"require": {
+		"pimple/pimple": "^3.0"
+	}
+}
