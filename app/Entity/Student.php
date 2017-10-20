@@ -1,16 +1,18 @@
 <?php
+
 namespace Students\Entity;
 
-class Student {
-	private $firstname;
-	private $lastname;
-	private $gender;
-	private $groupNum;
-	private $email;
-	private $points;
-	private $year;
-	private $residence;
-	private $hash;
+class Student
+{
+    private $firstname;
+    private $lastname;
+    private $gender;
+    private $groupNum;
+    private $email;
+    private $points;
+    private $year;
+    private $residence;
+    private $hash;
 
     const GENDER_MALE = 'male';
     const GENDER_FEMALE = 'female';
@@ -18,50 +20,60 @@ class Student {
     const RESIDENCE_RESIDENT = 'resident';
     const RESIDENCE_NONRESIDENT = 'nonresident';
 
-    public function setValue($value) {
+    public function setValue($value)
+    {
         foreach ($value as $v => $k) {
             $this->$v = $k;
         }
-	}
+    }
 
-    public function setHash($hash) {
+    public function setHash($hash)
+    {
         $this->hash = $hash;
     }
 
-    public function getFirstName() {
+    public function getFirstName()
+    {
         return $this->firstname;
     }
 
-    public function getLastName() {
+    public function getLastName()
+    {
         return $this->lastname;
     }
 
-    public function getGender() {
+    public function getGender()
+    {
         return $this->gender;
     }
 
-    public function getGroupNum() {
+    public function getGroupNum()
+    {
         return $this->groupNum;
     }
 
-    public function getEmail() {
+    public function getEmail()
+    {
         return $this->email;
     }
 
-    public function getPoints() {
+    public function getPoints()
+    {
         return $this->points;
     }
 
-    public function getYear() {
+    public function getYear()
+    {
         return $this->year;
     }
 
-    public function getResidence() {
+    public function getResidence()
+    {
         return $this->residence;
     }
 
-    public function getHash() {
+    public function getHash()
+    {
         return $this->hash;
     }
 }
-

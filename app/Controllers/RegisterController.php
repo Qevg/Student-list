@@ -1,4 +1,5 @@
 <?php
+
 namespace Students\Controllers;
 
 use Students\Helpers\Authorization;
@@ -9,13 +10,15 @@ use Students\Validators\Validator;
 use Students\Views\View;
 use Students\Helpers\Util;
 
-class RegisterController extends Controller {
+class RegisterController extends Controller
+{
     protected $student;
     protected $authorization;
     protected $validator;
     protected $CSRFProtection;
 
-    public function __construct(\Pimple\Container $container) {
+    public function __construct(\Pimple\Container $container)
+    {
         $this->c = $container;
         $this->student = new Student();
         $this->authorization = new Authorization();
@@ -24,9 +27,10 @@ class RegisterController extends Controller {
         $this->view = new View('register');
     }
 
-	public function indexAction() {
-	    $isAuth = false;
-	    $userData = null;
+    public function indexAction()
+    {
+        $isAuth = false;
+        $userData = null;
         $token = $this->CSRFProtection->setCSRFToken();
         $error = null;
         if (isset($_COOKIE['Auth'])) {
@@ -77,5 +81,5 @@ class RegisterController extends Controller {
 
         $studentValidator = $this->c['StudentValidator'];
         $this->view->render(compact('userData', 'isAuth', 'token', 'error', 'studentValidator'));
-	 }
+    }
 }

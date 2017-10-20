@@ -1,10 +1,12 @@
 <?php
+
 namespace Students\Validators;
 
 use Students\Databases\StudentDataGateway;
 use Students\Entity\Student;
 
-class StudentValidator {
+class StudentValidator
+{
     private $data;
     private $value;
     private $error;
@@ -64,17 +66,20 @@ class StudentValidator {
         )
     );
 
-    public function __construct($studentGW) {
+    public function __construct($studentGW)
+    {
         $this->studentGW = $studentGW;
     }
 
-    public function filter() {
+    public function filter()
+    {
         foreach ($this->template as $key => $value) {
             $this->value[$key] = array_key_exists($key, $this->data) ? strval(trim($this->data[$key])) : '';
         }
     }
 
-    public function validate() {
+    public function validate()
+    {
         foreach ($this->template as $key => $value) {
             if (isset($value['regexp'])) {
                 if (!preg_match($value['regexp'], $this->value[$key])) {
@@ -84,30 +89,24 @@ class StudentValidator {
             if ($value['type'] == 'string') {
                 if (mb_strlen($this->value[$key]) == 0) {
                     $this->error[$key] = 'Пожалуйста заполните это поле';
-                }
-                elseif (mb_strlen($this->value[$key]) < $value['min']) {
+                } elseif (mb_strlen($this->value[$key]) < $value['min']) {
                     $this->error[$key] = 'Это поле должно содержать минимум ' . $value['min'] . ' символов';
-                }
-                elseif (mb_strlen($this->value[$key]) > $value['max']) {
+                } elseif (mb_strlen($this->value[$key]) > $value['max']) {
                     $this->error[$key] = 'Это поле не должно превышать ' . $value['max'] . ' символов';
                 }
-            }
-            elseif ($value['type'] == 'number') {
+            } elseif ($value['type'] == 'number') {
                 if ($this->value[$key] == null) {
                     $this->error[$key] = 'Пожалуйста заполните это поле';
-                }
-                elseif ($this->value[$key] < $value['min']) {
+                } elseif ($this->value[$key] < $value['min']) {
                     if (!isset($this->error[$key])) {
                         $this->error[$key] = 'Значение этого поля не должно быть меньше ' . $value['min'];
                     }
-                }
-                elseif ($this->value[$key] > $value['max']) {
+                } elseif ($this->value[$key] > $value['max']) {
                     if (!isset($this->error[$key])) {
                         $this->error[$key] = 'Значение этого поля не должно быть больше ' . $value['max'];
                     }
                 }
-            }
-            elseif ($value['type'] == 'enum') {
+            } elseif ($value['type'] == 'enum') {
                 if ($this->value[$key] !== $value['value1'] && $this->value[$key] !== $value['value2']) {
                     $this->error[$key] = 'Выберите пожалуйста одно из двух значений';
                 }
@@ -115,7 +114,8 @@ class StudentValidator {
         }
     }
 
-    public function isEmailUsed($id = '') {
+    public function isEmailUsed($id = '')
+    {
         if (!isset($this->error['email'])) {
             if ($this->studentGW->isEmailUsed($this->value['email'], $id) > 0) {
                 $this->error['email'] = 'Этот email уже зарегистрирован';
@@ -123,36 +123,44 @@ class StudentValidator {
         }
     }
 
-    public function setData($data) {
+    public function setData($data)
+    {
         $this->data = $data;
     }
 
-    public function getData() {
+    public function getData()
+    {
         return $this->data;
     }
 
-    public function getValue() {
+    public function getValue()
+    {
         return $this->value;
     }
 
-    public function getError() {
+    public function getError()
+    {
         return $this->error;
     }
 
-    public function getCountError() {
+    public function getCountError()
+    {
         return count($this->error);
     }
 
 
-    public function getMin($name) {
+    public function getMin($name)
+    {
         return $this->template[$name]['min'];
     }
 
-    public function getMax($name) {
+    public function getMax($name)
+    {
         return $this->template[$name]['max'];
     }
 
-    public function getRegexpForClient($name) {
+    public function getRegexpForClient($name)
+    {
         // Delete all characters after the last '/'
         $regexp = substr($this->template[$name]['regexp'], 0, strrpos($this->template[$name]['regexp'], '/') + 1);
 
@@ -167,7 +175,8 @@ class StudentValidator {
         return $regexp;
     }
 
-    public function getMessage($name) {
+    public function getMessage($name)
+    {
         return $this->template[$name]['message'];
     }
 }

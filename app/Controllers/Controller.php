@@ -1,7 +1,9 @@
 <?php
+
 namespace Students\Controllers;
 
-abstract class Controller {
+abstract class Controller
+{
     protected $c;
     protected $view;
 }
