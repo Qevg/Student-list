@@ -31,6 +31,7 @@ before_script:
   - sudo cp -f travis-build/travis-ci-apache /etc/apache2/sites-available/000-default.conf
   - sudo sed -e "s?%TRAVIS_BUILD_DIR%?$(pwd)?g" --in-place /etc/apache2/sites-available/000-default.conf
   - sudo service apache2 restart
+
 script:
   - php vendor/bin/codecept run unit
   - php vendor/bin/codecept run acceptance
