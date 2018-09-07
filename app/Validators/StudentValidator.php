@@ -5,178 +5,255 @@ namespace Students\Validators;
 use Students\Databases\StudentDataGateway;
 use Students\Entity\Student;
 
-class StudentValidator
+/**
+ * Class StudentValidator
+ * @package Students\Validators
+ */
+class StudentValidator extends Validator
 {
-    private $data;
-    private $value;
-    private $error;
-    private $studentGW;
-    private $template = array(
-        'firstname' => array(
-            'type' => 'string',
-            'min' => 1,
-            'max' => 60,
-            'regexp' => '/^[А-ЯЁа-яё \'\\-]+|[A-Za-z \'\\-]+$/u',
-            'message' => 'Имя должно состоять из кириллических или латинских символов и может содержать дефис, апостроф, пробел'
-        ),
-        'lastname' => array(
-            'type' => 'string',
-            'min' => 1,
-            'max' => 60,
-            'regexp' => '/^[А-ЯЁа-яё \'\\-]+|[A-Za-z \'\\-]+$/u',
-            'message' => 'Фамилия должна состоять из кириллических или латинских символов и может содержать дефис, апостроф, пробел'
-        ),
-        'gender' => array(
-            'type' => 'enum',
-            'value1' => Student::GENDER_MALE,
-            'value2' => Student::GENDER_FEMALE
-        ),
-        'groupNum' => array(
-            'type' => 'string',
-            'min' => 1,
-            'max' => 5,
-            'regexp' => '/^[А-ЯЁа-яё0-9\\-]+|[A-Za-z0-9\\-]+$/u',
-            'message' => 'Номер группы должен состоять из кириллических или латинских символов, цифр и может содержать дефис'
-        ),
-        'email' => array(
-            'type' => 'string',
-            'min' => 3,
-            'max' => 60,
-            'regexp' => '/^.+@.+$/u',
-            'message' => 'Адрес электронной почты должен состоять из двух частей, разделённых символом «@». Пример: name@example.com'
-        ),
-        'points' => array(
-            'type' => 'number',
-            'min' => 0,
-            'max' => 500,
-            'regexp' => '/^[0-9]+$/u',
-            'message' => 'Это поле должно содержать только цифры'
-        ),
-        'year' => array(
-            'type' => 'number',
-            'min' => 1970,
-            'max' => 2017,
-            'regexp' => '/^[0-9]+$/u',
-            'message' => 'Это поле должно содержать только цифры'
-        ),
-        'residence' => array(
-            'type' => 'enum',
-            'value1' => Student::RESIDENCE_RESIDENT,
-            'value2' => Student::RESIDENCE_NONRESIDENT
-        )
-    );
+    /**
+     * @var StudentDataGateway $studentGateway
+     */
+    private $studentGateway;
 
-    public function __construct($studentGW)
+    /**
+     * StudentValidator constructor.
+     *
+     * @param StudentDataGateway $studentGateway
+     */
+    public function __construct(StudentDataGateway $studentGateway)
     {
-        $this->studentGW = $studentGW;
+        $this->studentGateway = $studentGateway;
     }
 
-    public function filter()
+    /**
+     * Validates user register
+     *
+     * todo мб сделать сущность StudentError?
+     *
+     * @param Student $student
+     *
+     * @return array
+     */
+    public function validateRegister(Student $student): array
     {
-        foreach ($this->template as $key => $value) {
-            $this->value[$key] = array_key_exists($key, $this->data) ? strval(trim($this->data[$key])) : '';
+        $errors = array();
+
+        $errors['firstName'] = $this->validateFirstName($student->getFirstName());
+        $errors['lastName'] = $this->validateLastName($student->getLastName());
+        $errors['gender'] = $this->validateGender($student->getGender());
+        $errors['groupNum'] = $this->validateGroupNum($student->getGroupNum());
+        $errors['email'] = $this->validateEmail($student->getEmail());
+        if (empty($errors['email'])) {
+            $errors['email'] = $this->validateEmailUnique($student->getEmail());
+        }
+        $errors['points'] = $this->validatePoints($student->getPoints());
+        $errors['year'] = $this->validateYear($student->getYear());
+        $errors['residence'] = $this->validateResidence($student->getResidence());
+
+        return array_filter($errors);
+    }
+
+    /**
+     * Validates user update
+     *
+     * @param Student $student
+     *
+     * @return array
+     */
+    public function validateUpdate(Student $student): array
+    {
+        $errors = array();
+
+        $errors['firstName'] = $this->validateFirstName($student->getFirstName());
+        $errors['lastName'] = $this->validateLastName($student->getLastName());
+        $errors['gender'] = $this->validateGender($student->getGender());
+        $errors['groupNum'] = $this->validateGroupNum($student->getGroupNum());
+        $errors['email'] = $this->validateEmail($student->getEmail());
+        $errors['points'] = $this->validatePoints($student->getPoints());
+        $errors['year'] = $this->validateYear($student->getYear());
+        $errors['residence'] = $this->validateResidence($student->getResidence());
+
+        return array_filter($errors);
+    }
+
+    /**
+     * Validates first name
+     *
+     * @param string $firstName
+     *
+     * @return string|null
+     */
+    private function validateFirstName(string $firstName)
+    {
+        $min = 1;
+        $max = 60;
+        $errorLength = "Имя пользователя должно содержать не меньше {$min} и не больше {$max} символов";
+
+        $pattern = '/^[А-ЯЁа-яё \'\\-]+|[A-Za-z \'\\-]+$/u';
+        $errorPattern = 'Имя должно состоять из кириллических или латинских символов и может содержать дефис, апостроф, пробел';
+
+        if (!$this->validateLength($firstName, $min, $max)) {
+            return $errorLength;
+        } elseif (!$this->validatePattern($pattern, $firstName)) {
+            return $errorPattern;
         }
     }
 
-    public function validate()
+    /**
+     * Validates last name
+     *
+     * @param string $lastName
+     *
+     * @return string|null
+     */
+    private function validateLastName(string $lastName)
     {
-        foreach ($this->template as $key => $value) {
-            if (isset($value['regexp'])) {
-                if (!preg_match($value['regexp'], $this->value[$key])) {
-                    $this->error[$key] = $value['message'];
-                }
-            }
-            if ($value['type'] == 'string') {
-                if (mb_strlen($this->value[$key]) == 0) {
-                    $this->error[$key] = 'Пожалуйста заполните это поле';
-                } elseif (mb_strlen($this->value[$key]) < $value['min']) {
-                    $this->error[$key] = 'Это поле должно содержать минимум ' . $value['min'] . ' символов';
-                } elseif (mb_strlen($this->value[$key]) > $value['max']) {
-                    $this->error[$key] = 'Это поле не должно превышать ' . $value['max'] . ' символов';
-                }
-            } elseif ($value['type'] == 'number') {
-                if ($this->value[$key] == null) {
-                    $this->error[$key] = 'Пожалуйста заполните это поле';
-                } elseif ($this->value[$key] < $value['min']) {
-                    if (!isset($this->error[$key])) {
-                        $this->error[$key] = 'Значение этого поля не должно быть меньше ' . $value['min'];
-                    }
-                } elseif ($this->value[$key] > $value['max']) {
-                    if (!isset($this->error[$key])) {
-                        $this->error[$key] = 'Значение этого поля не должно быть больше ' . $value['max'];
-                    }
-                }
-            } elseif ($value['type'] == 'enum') {
-                if ($this->value[$key] !== $value['value1'] && $this->value[$key] !== $value['value2']) {
-                    $this->error[$key] = 'Выберите пожалуйста одно из двух значений';
-                }
-            }
+        $min = 1;
+        $max = 60;
+        $errorLength = "Фамилия пользователя должна содержать не меньше {$min} и не больше {$max} символов";
+
+        $pattern = '/^[А-ЯЁа-яё \'\\-]+|[A-Za-z \'\\-]+$/u';
+        $errorPattern = 'Фамилия должна состоять из кириллических или латинских символов и может содержать дефис, апостроф, пробел';
+
+        if (!$this->validateLength($lastName, $min, $max)) {
+            return $errorLength;
+        } elseif (!$this->validatePattern($pattern, $lastName)) {
+            return $errorPattern;
         }
     }
 
-    public function isEmailUsed($id = '')
+    /**
+     * Validates gender
+     *
+     * @param string $gender
+     *
+     * @return string|null
+     */
+    private function validateGender(string $gender)
     {
-        if (!isset($this->error['email'])) {
-            if ($this->studentGW->isEmailUsed($this->value['email'], $id) > 0) {
-                $this->error['email'] = 'Этот email уже зарегистрирован';
-            }
+        if ($gender !== Student::GENDER_MALE && $gender !== Student::GENDER_FEMALE) {
+            return 'Выберите пожалуйста пол';
         }
     }
 
-    public function setData($data)
+    /**
+     * Validates group num
+     *
+     * @param string $groupNum
+     *
+     * @return string|null
+     */
+    private function validateGroupNum(string $groupNum)
     {
-        $this->data = $data;
+        $min = 1;
+        $max = 5;
+        $errorLength = "Номер группы должен содержать не меньше {$min} и не больше {$max} символов";
+
+        $pattern = '/^[А-ЯЁа-яё0-9\\-]+|[A-Za-z0-9\\-]+$/u';
+        $errorPattern = 'Номер группы должен состоять из кириллических или латинских символов, цифр и может содержать дефис';
+
+        if (!$this->validateLength($groupNum, $min, $max)) {
+            return $errorLength;
+        } elseif (!$this->validatePattern($pattern, $groupNum)) {
+            return $errorPattern;
+        }
     }
 
-    public function getData()
+    /**
+     * Validates email
+     *
+     * @param string $email
+     *
+     * @return string|null
+     */
+    private function validateEmail(string $email)
     {
-        return $this->data;
+        $min = 3;
+        $max = 120;
+        $errorLength = "Email адрес должен содержать не меньше {$min} и не больше {$max} символов";
+
+        $pattern = '/^.+@.+$/u';
+        $errorPattern = 'Адрес электронной почты должен состоять из двух частей, разделённых символом «@». Например: name@example.com';
+
+        if (!$this->validateLength($email, $min, $max)) {
+            return $errorLength;
+        } elseif (!$this->validatePattern($pattern, $email)) {
+            return $errorPattern;
+        }
     }
 
-    public function getValue()
+    /**
+     * Checks the uniqueness of email
+     *
+     * @param string $email
+     *
+     * @return string|null
+     */
+    private function validateEmailUnique(string $email)
     {
-        return $this->value;
+        if (!$this->studentGateway->isEmailUnique($email)) {
+            return 'Этот email уже используется';
+        }
     }
 
-    public function getError()
+    /**
+     * Validates points
+     *
+     * @param int $points
+     *
+     * @return string|null
+     */
+    private function validatePoints(int $points)
     {
-        return $this->error;
+        $min = 0;
+        $max = 500;
+        $errorLength = "Значение этого поля должно быть не меньше {$min} и не больше {$max}";
+
+        $pattern = '/^[0-9]+$/u';
+        $errorPattern = 'Это поле должно содержать только цифры';
+
+         if (!$this->validateNumber($points, $min, $max)) {
+            return $errorLength;
+        } elseif (!$this->validatePattern($pattern, $points)) {
+            return $errorPattern;
+        }
     }
 
-    public function getCountError()
+    /**
+     * Validates year
+     *
+     * @param int $year
+     *
+     * @return string|null
+     */
+    private function validateYear(int $year)
     {
-        return count($this->error);
+        $min = 1970;
+        $max = 2017;
+        $errorLength = "Значение этого поля должно быть не меньше {$min} и не больше {$max}";
+
+        $pattern = '/^[0-9]+$/u';
+        $errorPattern = 'Это поле должно содержать только цифры';
+
+        if (!$this->validateNumber($year, $min, $max)) {
+            return $errorLength;
+        } elseif (!$this->validatePattern($pattern, $year)) {
+            return $errorPattern;
+        }
     }
 
-
-    public function getMin($name)
+    /**
+     * Validates residence
+     *
+     * @param string $residence
+     *
+     * @return string|null
+     */
+    private function validateResidence(string $residence)
     {
-        return $this->template[$name]['min'];
-    }
-
-    public function getMax($name)
-    {
-        return $this->template[$name]['max'];
-    }
-
-    public function getRegexpForClient($name)
-    {
-        // Delete all characters after the last '/'
-        $regexp = substr($this->template[$name]['regexp'], 0, strrpos($this->template[$name]['regexp'], '/') + 1);
-
-        $regexp = trim($regexp, '/');
-        $regexp = ltrim($regexp, '^');
-        $regexp = rtrim($regexp, '$');
-
-        $search = array('\\', ' ');
-        $replace = array('', '\s');
-        $regexp = str_replace($search, $replace, $regexp);
-
-        return $regexp;
-    }
-
-    public function getMessage($name)
-    {
-        return $this->template[$name]['message'];
+        if ($residence !== Student::RESIDENCE_RESIDENT && $residence !== Student::RESIDENCE_NONRESIDENT) {
+            return 'Выберите пожалуйста место проживания';
+        }
     }
 }

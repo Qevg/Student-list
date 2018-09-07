@@ -2,25 +2,58 @@
 
 namespace Students\Views;
 
-use Students\Helpers\UrlGenerator;
+use Students\Helpers\CSRFProtection;
 
+/**
+ * Class View
+ * @package Students\Views
+ */
 class View
 {
-    private $header;
-    private $template;
-    private $footer;
+    /**
+     * @var string $csrfToken
+     */
+    private $csrfToken;
 
-    public function __construct($template)
+    /**
+     * View constructor.
+     *
+     * @param CSRFProtection $csrf
+     */
+    public function __construct(CSRFProtection $csrf)
     {
-        $this->header = __DIR__ . '/templates/header.php';
-        $this->template = $template;
-        $this->footer = __DIR__ . '/templates/footer.php';
+        $this->csrfToken = $csrf->getCsrfToken();
     }
 
-    public function render($params = [])
+    /**
+     * Render template
+     *
+     * @param string $template
+     * @param array $params
+     */
+    public function render(string $template, array $params = []): void
     {
-        require_once $this->header;
-        require_once __DIR__ . '/' . $this->template . '.php';
-        require_once $this->footer;
+        extract($params);
+        require_once __DIR__ . "/../../templates/{$template}.php";
+    }
+
+    /**
+     * Convert special characters to HTML entities
+     *
+     * @param mixed $string
+     *
+     * @return string
+     */
+    public function html($string): string
+    {
+        return htmlspecialchars($string, ENT_QUOTES);
+    }
+
+    /**
+     * @return string
+     */
+    public function getCsrfToken(): string
+    {
+        return $this->csrfToken;
     }
 }

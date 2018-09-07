@@ -24,19 +24,19 @@ DROP TABLE IF EXISTS `students`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `students` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `firstname` varchar(255) NOT NULL,
-  `lastname` varchar(255) NOT NULL,
+  `firstName` varchar(60) NOT NULL,
+  `lastName` varchar(60) NOT NULL,
   `gender` enum('male','female') NOT NULL,
   `groupNum` varchar(5) NOT NULL,
-  `email` varchar(255) NOT NULL,
+  `email` varchar(120) NOT NULL,
   `points` int(3) NOT NULL,
   `year` year(4) NOT NULL,
   `residence` enum('resident','nonresident') NOT NULL,
-  `hash` varchar(255) NOT NULL,
+  `token` varchar(64) NOT NULL COMMENT 'token for auth',
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`),
-  UNIQUE KEY `hash` (`hash`)
-) ENGINE=InnoDB AUTO_INCREMENT=501 DEFAULT CHARSET=utf8;
+  UNIQUE KEY `token` (`token`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --

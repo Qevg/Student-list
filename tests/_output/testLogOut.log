@@ -1,0 +1,29 @@
+RegistrationCest: Test that log out works
+Signature: Students\Tests\Functional\RegistrationCest:testLogOut
+Test: tests/acceptance/RegistrationCest.php:testLogOut
+Scenario --
+ I set cookie "auth","4f0633b7cb2va6b0a743fbb50a220de2"
+  [Cookie Jar] ["auth=4f0633b7cb2va6b0a743fbb50a220de2; path=/; httponly"]
+ I am on page "/"
+  [Request Headers] []
+  [Page] /
+  [Response] 200
+  [Request Cookies] {"auth":"4f0633b7cb2va6b0a743fbb50a220de2"}
+  [Response Headers] {"Date":["Tue, 04 Sep 2018 11:03:25 GMT"],"Server":["Apache/2.4.18 (Ubuntu)"],"Set-Cookie":["csrf=7ef2aa1c13e4da698c9cf333fcfae499c91fbcefdfdfd28421c5c4fbc72c9a37; expires=Tue, 04-Sep-2018 12:03:25 GMT; Max-Age=3600; path=/; HttpOnly"],"Vary":["Accept-Encoding"],"Content-Length":["2994"],"Content-Type":["text/html; charset=UTF-8"]}
+ I click "logout"
+  [Uri] http://student.site/logout
+  [Method] POST
+  [Parameters] {"csrf":"7ef2aa1c13e4da698c9cf333fcfae499c91fbcefdfdfd28421c5c4fbc72c9a37","logout":""}
+  [Request Headers] []
+  [Page] http://student.site/logout
+  [Response] 302
+  [Request Cookies] {"auth":"4f0633b7cb2va6b0a743fbb50a220de2","csrf":"7ef2aa1c13e4da698c9cf333fcfae499c91fbcefdfdfd28421c5c4fbc72c9a37"}
+  [Response Headers] {"Date":["Tue, 04 Sep 2018 11:03:25 GMT"],"Server":["Apache/2.4.18 (Ubuntu)"],"Set-Cookie":["csrf=7ef2aa1c13e4da698c9cf333fcfae499c91fbcefdfdfd28421c5c4fbc72c9a37; expires=Tue, 04-Sep-2018 12:03:25 GMT; Max-Age=3600; path=/; HttpOnly","auth=deleted; expires=Thu, 01-Jan-1970 00:00:01 GMT; Max-Age=0; path=/; HttpOnly"],"Location":["/"],"Content-Length":["0"],"Content-Type":["text/html; charset=UTF-8"]}
+  [Redirecting to] /
+  [Page] /
+  [Response] 200
+  [Request Cookies] {"auth":"4f0633b7cb2va6b0a743fbb50a220de2","csrf":"7ef2aa1c13e4da698c9cf333fcfae499c91fbcefdfdfd28421c5c4fbc72c9a37"}
+  [Response Headers] {"Date":["Tue, 04 Sep 2018 11:03:25 GMT"],"Server":["Apache/2.4.18 (Ubuntu)"],"Set-Cookie":["csrf=7ef2aa1c13e4da698c9cf333fcfae499c91fbcefdfdfd28421c5c4fbc72c9a37; expires=Tue, 04-Sep-2018 12:03:25 GMT; Max-Age=3600; path=/; HttpOnly"],"Vary":["Accept-Encoding"],"Content-Length":["2994"],"Content-Type":["text/html; charset=UTF-8"]}
+ I don't see cookie "auth"
+  [Cookie Jar] ["auth=4f0633b7cb2va6b0a743fbb50a220de2; path=/; httponly","csrf=7ef2aa1c13e4da698c9cf333fcfae499c91fbcefdfdfd28421c5c4fbc72c9a37; expires=Tue, 04 Sep 2018 12:03:25 GMT; domain=student.site; path=/; httponly"]
+ FAIL

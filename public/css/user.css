@@ -32,17 +32,14 @@ div.submit {
     margin-top: 40px;
 }
 
-/* Hide alert alert in 3 seconds */
-.custom-alert {
-    animation: custom-alert 1s ease-in 3s forwards;
+.nav-login {
     margin-bottom: 0px;
 }
 
-@keyframes custom-alert {
-    0% {
-        opacity: 1;
-    }
-    100% {
-        opacity: 0;
-    }
+.btn-log-out {
+    padding: 0px;
+}
+
+.student-list-heading {
+    margin-left: -15px;
 }

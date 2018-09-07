@@ -2,37 +2,115 @@
 
 namespace Students;
 
+use Psr\Container\ContainerInterface;
+use Students\Controllers\HomeController;
+use Students\Controllers\RegisterController;
+use Students\Exceptions\CsrfException;
+use Students\Exceptions\MalformedUrlException;
 use Students\Exceptions\NotFoundException;
+use Pimple\Container;
+use Students\Helpers\CSRFProtection;
 
+/**
+ * Class Router
+ * @package Students
+ */
 class Router
 {
-    public function start(\Pimple\Container $container)
+    /**
+     * @var Container $container
+     */
+    private $container;
+
+    /**
+     * @var CSRFProtection $csrfProtection
+     */
+    private $csrfProtection;
+
+    /**
+     * Router constructor.
+     *
+     * @param Container $container
+     */
+    public function __construct(Container $container)
     {
-        $controller = "home";
-        $action = "index";
-        $container = $container;
+        $this->container = $container;
+        $this->csrfProtection = $container['CSRFProtection'];
 
-        $parseUrl = parse_url($_SERVER["REQUEST_URI"]);
-        if (isset($parseUrl['path'])) {
-            $path = preg_split('/\//', $parseUrl['path'], -1, PREG_SPLIT_NO_EMPTY);
+        $this->addHandler();
+        $this->startCsrfProtection();
+    }
+
+    /**
+     * Run router
+     *
+     * @throws NotFoundException
+     */
+    public function run(): void
+    {
+        $url = $this->parseUrl($_SERVER["REQUEST_URI"]);
+
+        switch ($url['path']) {
+            case '/' :
+                $controller = new HomeController($this->container);
+                $controller();
+                break;
+            case '/register':
+                $controller = new RegisterController($this->container);
+                $controller();
+                break;
+            case '/logout':
+                $controller = new RegisterController($this->container);
+                $controller->logout();
+                break;
+            default:
+                throw new NotFoundException();
+        }
+    }
+
+    /**
+     * Parse url
+     *
+     * @param string $url
+     *
+     * @return array
+     * @throws MalformedUrlException
+     */
+    private function parseUrl(string $url): array
+    {
+        $parts = parse_url($url);
+
+        if ($parts === false) {
+            throw new MalformedUrlException("Failed to parse url: {$url}");
         }
 
-        if (isset($path[0])) {
-            $controller = $path[0];
-        }
+        return $parts;
+    }
 
-        if (isset($path[1])) {
-            $action = $path[1];
-        }
+    /**
+     * Adds exception and error handler
+     */
+    private function addHandler(): void
+    {
+        set_exception_handler($this->container['exceptionHandler']);
+        set_error_handler($this->container['errorHandler']);
+    }
 
-        $controller = sprintf('%s\%s\%s%s', __NAMESPACE__, 'Controllers', ucfirst(strtolower($controller)), 'Controller');
-        $action = $action . 'Action';
+    /**
+     * Start csrf protection
+     *
+     * Validates csrf token for 'post', 'put' and 'delete' methods
+     *
+     * @throws CsrfException
+     */
+    private function startCsrfProtection(): void
+    {
+        $this->csrfProtection->startCsrfProtection();
 
-        if (class_exists($controller) && method_exists($controller, $action)) {
-            $controller = new $controller($container);
-            $controller->$action();
-        } else {
-            throw new NotFoundException();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' || $_SERVER['REQUEST_METHOD'] === 'PUT' || $_SERVER['REQUEST_METHOD'] === 'DELETE') {
+            if (!$this->csrfProtection->validateCsrfToken()) {
+                throw new CsrfException('Invalid CSRF token');
+            }
         }
     }
 }

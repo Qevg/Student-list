@@ -1,13 +1,12 @@
-<?php extract($params); ?>
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <?php if ($this->template == "home"): ?>
+    <?php if ($page === "home"): ?>
         <title>Список студентов</title>
-    <?php elseif ($this->template == "register" && $isAuth == false): ?>
+    <?php elseif ($page === "register" && $user === null): ?>
         <title>Регистрация</title>
-    <?php elseif ($this->template == "register" && $isAuth == true): ?>
+    <?php elseif ($page === "register" && $user !== null): ?>
         <title>Изменение данных</title>
     <?php endif; ?>
     <link rel="stylesheet" href="/bootstrap/css/bootstrap.min.css">

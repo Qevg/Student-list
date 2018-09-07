@@ -2,87 +2,97 @@
 
 namespace Students\Controllers;
 
-use Students\Helpers\Authorization;
+use Students\Databases\StudentDataGateway;
+use Students\Entity\Student;
+use Students\Entity\Table;
+use Students\Helpers\AuthHelper;
+use Students\Helpers\CookieHelper;
+use Students\Helpers\PaginationHelper;
 use Students\Helpers\Util;
 use Students\Validators\Validator;
 use Students\Views\View;
-use Students\Helpers\UrlGenerator;
+use Students\Helpers\TableAndPagerLinkHelper;
+use Pimple\Container;
 
-class HomeController extends Controller
+/**
+ * Class HomeController
+ * @package Students\Controllers
+ */
+class HomeController
 {
-    protected $authorization;
-    protected $validator;
+    /**
+     * @var View $view
+     */
+    private $view;
 
-    public function __construct(\Pimple\Container $container)
+    /**
+     * @var AuthHelper $authHelper
+     */
+    private $authHelper;
+
+    /**
+     * @var StudentDataGateway $studentGateway
+     */
+    private $studentGateway;
+
+    /**
+     * @var CookieHelper $cookieHelper
+     */
+    private $cookieHelper;
+
+    /**
+     * @var null|Student $user
+     */
+    private $user;
+
+    /**
+     * HomeController constructor.
+     *
+     * @param Container $c
+     */
+    public function __construct(Container $c)
     {
-        $this->c = $container;
-        $this->authorization = new Authorization();
-        $this->validator = new Validator();
-        $this->view = new View('home');
+        $this->view = $c['view'];
+        $this->authHelper = $c['AuthHelper'];
+        $this->studentGateway = $c['StudentGateway'];
+        $this->cookieHelper = $c['CookieHelper'];
+        $this->user = $this->authHelper->getUser();
     }
 
-    public function indexAction()
+    /**
+     * Shows home page
+     */
+    public function __invoke(): void
     {
-        $isAuth = false;
-        $userName = null;
-        $message = [];
-
-        $this->validator->validateSearch($this->c['StudentGateway'], $_GET);
-        $search = $this->validator->getValidSearch();
-
-        $limit = 15;
-        $countStudent = $this->c['StudentGateway']->getCountStudent($search);
-        $countPage = ceil($countStudent / $limit);
-
-        $this->validator->validatePage($_GET, $countPage);
-        $currentPage = $this->validator->getValidPage();
-
+        $currentPage = isset($_GET['page']) ? intval($_GET['page']) : 1;
+        $limit = 15; //students on page
         $offset = ($currentPage - 1) * $limit;
 
-        $this->validator->validateSort($_GET);
-        $column = $this->validator->getValidColumn();
-        $orderBy = $this->validator->getValidOrderBy();
+        $columns = array('firstName', 'lastName', 'groupNum', 'points');
+        $column = isset($_GET['column']) && in_array($_GET['column'], $columns) ? strval($_GET['column']) : 'points';
+        $orderBy = isset($_GET['orderBy']) && $_GET['orderBy'] === 'ASC' ? 'ASC' : 'DESC';
+        $search = isset($_GET['search']) ? trim(strval($_GET['search'])) : null;
 
-        if (isset($_COOKIE['Auth'])) {
-            $this->validator->validateCookie($_COOKIE['Auth']);
-            $hash = $this->validator->getValidCookie();
-            if ($this->authorization->checkAuth($this->c['StudentGateway'], $hash) == true) {
-                if (isset($_GET['logout'])) {
-                    $this->authorization->logOut($hash);
-                    header("Location: home");
-                } else {
-                    $isAuth = true;
-                    $userData = $this->c['StudentGateway']->getStudentByHash($hash);
-                    $userName = $userData['firstname'] . ' ' . $userData['lastname'];
-                }
-            }
-        }
-        session_start();
-        if (isset($_SESSION['addStudent']) && ($_SESSION['addStudent'] == true)) {
-            $message['addStudent'] = true;
-            unset($_SESSION['addStudent']);
-        } elseif (isset($_SESSION['editStudent']) && ($_SESSION['editStudent'] == true)) {
-            $message['editStudent'] = true;
-            unset($_SESSION['editStudent']);
-        }
-        session_write_close();
+        $students = $this->studentGateway->getStudents($search, $limit, $offset, $column, $orderBy);
+        $countStudent = $this->studentGateway->getCountStudents($search);
 
-        $students = $this->c['StudentGateway']->getStudent($search, $limit, $offset, $column, $orderBy);
-        $urlGenerator = new UrlGenerator($search, $column, $orderBy, $currentPage);
-        $this->view->render(
-            compact(
-                'students',
-                'urlGenerator',
-                'isAuth',
-                'userName',
-                'message',
-                'countStudent',
-                'countPage',
-                'currentPage',
-                'search',
-                'column',
-                'orderBy'
-            )
-        );
+        $table = new Table($search, $column, $orderBy);
+        $linkHelper = new TableAndPagerLinkHelper($search, $column, $orderBy, $currentPage);
+        $pageHelper = new PaginationHelper($currentPage, $countStudent, $limit);
+        $notify = isset($_COOKIE['notify']) ? strval($_COOKIE['notify']) : null;
+        if ($notify !== null) {
+            $this->cookieHelper->deleteCookieToClient('notify', CookieHelper::NOTIFY_LIFETIME);
+        }
+
+        $this->view->render('home', array(
+            'page' => 'home',
+            'user' => $this->user,
+            'students' => $students,
+            'table' => $table,
+            'linkHelper' => $linkHelper,
+            'pageHelper' => $pageHelper,
+            'notify' => $notify
+        ));
+
     }
 }

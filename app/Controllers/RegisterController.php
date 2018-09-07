@@ -2,84 +2,116 @@
 
 namespace Students\Controllers;
 
-use Students\Helpers\Authorization;
+use Students\Databases\StudentDataGateway;
+use Students\Helpers\AuthHelper;
 use Students\Entity\Student;
 use Students\Exceptions\BadRequestException;
+use Students\Helpers\CookieHelper;
 use Students\Helpers\CSRFProtection;
+use Students\Validators\StudentValidator;
 use Students\Validators\Validator;
 use Students\Views\View;
 use Students\Helpers\Util;
+use Pimple\Container;
 
-class RegisterController extends Controller
+/**
+ * Class RegisterController
+ * @package Students\Controllers
+ */
+class RegisterController
 {
-    protected $student;
-    protected $authorization;
-    protected $validator;
-    protected $CSRFProtection;
+    /**
+     * @var View $view
+     */
+    private $view;
 
-    public function __construct(\Pimple\Container $container)
+    /**
+     * @var AuthHelper $authHelper
+     */
+    private $authHelper;
+
+    /**
+     * @var StudentValidator $studentValidator
+     */
+    private $studentValidator;
+
+    /**
+     * @var StudentDataGateway $studentGateway
+     */
+    private $studentGateway;
+
+    /**
+     * @var CookieHelper $cookieHelper
+     */
+    private $cookieHelper;
+
+    /**
+     * @var null|Student
+     */
+    private $user;
+
+    /**
+     * @var array $errors
+     */
+    private $errors;
+
+    /**
+     * RegisterController constructor.
+     *
+     * @param Container $c
+     */
+    public function __construct(Container $c)
     {
-        $this->c = $container;
-        $this->student = new Student();
-        $this->authorization = new Authorization();
-        $this->validator = new Validator();
-        $this->CSRFProtection = new CSRFProtection();
-        $this->view = new View('register');
+        $this->view = $c['view'];
+        $this->authHelper = $c['AuthHelper'];
+        $this->studentValidator = $c['StudentValidator'];
+        $this->studentGateway = $c['StudentGateway'];
+        $this->cookieHelper = $c['CookieHelper'];
+        $this->user = $this->authHelper->getUser();
     }
 
-    public function indexAction()
+    /**
+     * Shows register and update student page
+     */
+    public function __invoke(): void
     {
-        $isAuth = false;
-        $userData = null;
-        $token = $this->CSRFProtection->setCSRFToken();
-        $error = null;
-        if (isset($_COOKIE['Auth'])) {
-            $this->validator->validateCookie($_COOKIE['Auth']);
-            $hash = $this->validator->getValidCookie();
-            if ($this->authorization->checkAuth($this->c['StudentGateway'], $hash) == true) {
-                $isAuth = true;
-                $userData = $this->c['StudentGateway']->getStudentByHash($hash);
-            }
-        }
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $student = new Student();
+            $student->setValues($_POST);
 
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            if ($this->CSRFProtection->checkCSRFToken() == false) {
-                throw new BadRequestException();
-            }
-            $this->c['StudentValidator']->setData($_POST);
-            $this->c['StudentValidator']->filter();
-            $this->c['StudentValidator']->validate();
-            if ($isAuth == true) {
-                $this->c['StudentValidator']->isEmailUsed($userData['id']);
-            } else {
-                $this->c['StudentValidator']->isEmailUsed();
-            }
-
-            if ($this->c['StudentValidator']->getCountError() == 0) {
-                if ($isAuth == true) {
-                    $this->student->setValue($this->c['StudentValidator']->getValue());
-                    $this->student->setHash($hash);
-                    $this->c['StudentGateway']->editStudent($this->student);
-                    session_start();
-                    $_SESSION['editStudent'] = true;
-                    session_write_close();
-                } else {
-                    $this->student->setValue($this->c['StudentValidator']->getValue());
-                    $this->student->setHash(Util::randHash());
-                    $this->c['StudentGateway']->addStudent($this->student);
-                    $this->authorization->logIn($this->student->getHash());
-                    session_start();
-                    $_SESSION['addStudent'] = true;
-                    session_write_close();
+            if ($this->authHelper->isAuth()) { // update student
+                $this->errors = $this->studentValidator->validateUpdate($student);
+                if (empty($this->errors)) {
+                    $student->setId($this->user->getId());
+                    $this->studentGateway->updateStudent($student);
+                    $this->cookieHelper->setCookieToClient('notify', 'updated', CookieHelper::NOTIFY_LIFETIME);
+                    header('Location: /');
+                    exit;
                 }
-                header("Location: home");
-            } else {
-                $error = $this->c['StudentValidator']->getError();
-                $userData = $this->c['StudentValidator']->getData();
+            } else { // register student
+                $this->errors = $this->studentValidator->validateRegister($student);
+                if (empty($this->errors)) {
+                    $student->setToken($this->authHelper->generateAuthToken());
+                    $this->studentGateway->addStudent($student);
+                    $this->cookieHelper->setCookieToClient('auth', $student->getToken(), CookieHelper::AUTH_TOKEN_LIFETIME);
+                    $this->cookieHelper->setCookieToClient('notify', 'registered', CookieHelper::NOTIFY_LIFETIME);
+                    header('Location: /');
+                    exit;
+                }
+            }
+        }
+        $this->view->render('register', array('page' => 'register', 'user' => $this->user, 'errors' => $this->errors));
+    }
+
+    public function logout()
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            if ($this->authHelper->isAuth()) {
+                $this->cookieHelper->deleteCookieToClient('auth', CookieHelper::AUTH_TOKEN_LIFETIME);
             }
         }
 
-        $studentValidator = $this->c['StudentValidator'];
-        $this->view->render(compact('userData', 'isAuth', 'token', 'error', 'studentValidator'));
+        header('Location: /');
+        exit;
     }
 }
