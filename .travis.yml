@@ -1,0 +1,39 @@
+language: php
+
+php:
+  - 7.1
+
+services:
+  - mysql
+
+before_install:
+  - sudo apt-get update
+  - sudo apt-get install apache2 jq
+
+before_script:
+  - composer install --no-interaction
+  # Start up a web server.
+  - php -S 127.0.0.1:8888 -t public >/dev/null 2>&1 &
+  # configure config/config.json
+  - tmp=$(mktemp)
+  - jq '.environment = "testing"' config/config.json > "$tmp" && mv "$tmp" config/config.json
+  # create test database
+  - sudo mysql -e 'CREATE DATABASE testdb;'
+  # configure config/config_testing.json
+  - tmp=$(mktemp)
+  - jq '.db.dbname = "testdb" | .db.user = "root" | .db.password = ""' config/config_testing.json > "$tmp" && mv "$tmp" config/config_testing.json
+  # configure acceptance.suite.yml
+  - sed -i 's/dbname=/dbname=testdb/g' tests/acceptance.suite.yml
+  - sed -i "s/user: ''/user: 'root'/g" tests/acceptance.suite.yml
+  - sed -i "s/password: ''/password: ''/g" tests/acceptance.suite.yml
+  - sed -i "s/url: ''/url: 'http:\/\/127.0.0.1:8888'/g" tests/acceptance.suite.yml
+  # configure apache virtual hosts
+  - sudo cp -f travis-build/travis-ci-apache /etc/apache2/sites-available/000-default.conf
+  - sudo sed -e "s?%TRAVIS_BUILD_DIR%?$(pwd)?g" --in-place /etc/apache2/sites-available/000-default.conf
+  - sudo service apache2 restart
+script:
+  - php vendor/bin/codecept run unit
+  - php vendor/bin/codecept run acceptance
+
+notifications:
+  email: false
