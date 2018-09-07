@@ -24,9 +24,10 @@ before_script:
   - jq '.db.dbname = "testdb" | .db.user = "root" | .db.password = ""' config/config_testing.json > "$tmp" && mv "$tmp" config/config_testing.json
   # configure acceptance.suite.yml
   - sed -i 's/dbname=/dbname=testdb/g' tests/acceptance.suite.yml
-  - sed -i "s/user: ''/user: 'root'/g" tests/acceptance.suite.yml
-  - sed -i "s/password: ''/password: ''/g" tests/acceptance.suite.yml
-  - sed -i "s/url: ''/url: 'http:\/\/127.0.0.1:8888'/g" tests/acceptance.suite.yml
+
+  - sed -i "s/"user:" ''/"user:" 'root'/g" tests/acceptance.suite.yml
+  - sed -i "s/"password:" ''/"password:" ''/g" tests/acceptance.suite.yml
+  - sed -i "s/"url:" ''/"url:" "\''http:\/\/127.0.0.1:8888'\'"/g" tests/acceptance.suite.yml
   # configure apache virtual hosts
   - sudo cp -f travis-build/travis-ci-apache /etc/apache2/sites-available/000-default.conf
   - sudo sed -e "s?%TRAVIS_BUILD_DIR%?$(pwd)?g" --in-place /etc/apache2/sites-available/000-default.conf
