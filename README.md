@@ -1,4 +1,4 @@
-# Student List
+# Student List [![Build Status](https://travis-ci.com/Qevg/Student-list.svg?branch=master)](https://travis-ci.com/Qevg/Student-list)
 
 ## Used technologies
 
