@@ -5,7 +5,6 @@ use Students\Databases\StudentDataGateway;
 use Students\Validators\StudentValidator;
 use Students\Helpers\AuthHelper;
 use Students\Views\View;
-use Students\Helpers\PaginationHelper;
 use Students\Router;
 use Students\Exceptions\NotFoundException;
 use Students\Exceptions\ConfigParseException;

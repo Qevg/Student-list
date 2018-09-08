@@ -2,7 +2,6 @@
 
 namespace Students;
 
-use Psr\Container\ContainerInterface;
 use Students\Controllers\HomeController;
 use Students\Controllers\RegisterController;
 use Students\Exceptions\CsrfException;

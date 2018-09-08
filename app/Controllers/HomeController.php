@@ -8,8 +8,6 @@ use Students\Entity\Table;
 use Students\Helpers\AuthHelper;
 use Students\Helpers\CookieHelper;
 use Students\Helpers\PaginationHelper;
-use Students\Helpers\Util;
-use Students\Validators\Validator;
 use Students\Views\View;
 use Students\Helpers\TableAndPagerLinkHelper;
 use Pimple\Container;

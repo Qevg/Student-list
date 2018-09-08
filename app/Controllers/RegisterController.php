@@ -5,13 +5,9 @@ namespace Students\Controllers;
 use Students\Databases\StudentDataGateway;
 use Students\Helpers\AuthHelper;
 use Students\Entity\Student;
-use Students\Exceptions\BadRequestException;
 use Students\Helpers\CookieHelper;
-use Students\Helpers\CSRFProtection;
 use Students\Validators\StudentValidator;
-use Students\Validators\Validator;
 use Students\Views\View;
-use Students\Helpers\Util;
 use Pimple\Container;
 
 /**

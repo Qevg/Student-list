@@ -2,3 +2,4 @@
 vendor
 composer.phar
 TODO
+.php_cs.cache
