@@ -15,7 +15,7 @@ $container = new Container;
 
 $container['environment'] = function (Container $c) {
     $config = json_decode(file_get_contents(__DIR__ . '/../config/config.json'), true);
-    if ($config === null) {
+    if ($config === null && json_last_error() !== JSON_ERROR_NONE) {
         throw new ConfigParseException(json_last_error_msg());
     }
 
@@ -33,7 +33,7 @@ $container['environment'] = function (Container $c) {
 
 $container['config'] = function (Container $c) {
     $config = json_decode(file_get_contents(__DIR__ . "/../config/config_{$c['environment']}.json"), true);
-    if ($config === null) {
+    if ($config === null && json_last_error() !== JSON_ERROR_NONE) {
         throw new ConfigParseException(json_last_error_msg());
     }
     return $config;

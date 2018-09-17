@@ -80,7 +80,7 @@ class RegisterController
                 if (empty($this->errors)) {
                     $student->setId($this->user->getId());
                     $this->studentGateway->updateStudent($student);
-                    $this->cookieHelper->setCookieToClient('notify', 'updated', CookieHelper::NOTIFY_LIFETIME);
+                    $this->cookieHelper->setCookieToClient(CookieHelper::NOTIFY_NAME, 'updated', CookieHelper::NOTIFY_LIFETIME);
                     header('Location: /');
                     exit;
                 }
@@ -89,8 +89,8 @@ class RegisterController
                 if (empty($this->errors)) {
                     $student->setToken($this->authHelper->generateAuthToken());
                     $this->studentGateway->addStudent($student);
-                    $this->cookieHelper->setCookieToClient('auth', $student->getToken(), CookieHelper::AUTH_TOKEN_LIFETIME);
-                    $this->cookieHelper->setCookieToClient('notify', 'registered', CookieHelper::NOTIFY_LIFETIME);
+                    $this->cookieHelper->setCookieToClient(CookieHelper::AUTH_TOKEN_NAME, $student->getToken(), CookieHelper::AUTH_TOKEN_LIFETIME);
+                    $this->cookieHelper->setCookieToClient(CookieHelper::NOTIFY_NAME, 'registered', CookieHelper::NOTIFY_LIFETIME);
                     header('Location: /');
                     exit;
                 }
@@ -103,7 +103,7 @@ class RegisterController
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($this->authHelper->isAuth()) {
-                $this->cookieHelper->deleteCookieToClient('auth', CookieHelper::AUTH_TOKEN_LIFETIME);
+                $this->cookieHelper->deleteCookieToClient(CookieHelper::AUTH_TOKEN_NAME, CookieHelper::AUTH_TOKEN_LIFETIME);
             }
         }
 

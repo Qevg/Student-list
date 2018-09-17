@@ -8,8 +8,13 @@ namespace Students\Helpers;
  */
 class CookieHelper
 {
+    const AUTH_TOKEN_NAME = 'auth';
     const AUTH_TOKEN_LIFETIME = '1 year';
+
+    const CSRF_TOKEN_NAME = 'csrf';
     const CSRF_TOKEN_LIFETIME = '1 hour';
+
+    const NOTIFY_NAME = 'notify';
     const NOTIFY_LIFETIME = '1 hour';
 
     /**

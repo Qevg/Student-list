@@ -79,7 +79,7 @@ class HomeController
         $pageHelper = new PaginationHelper($currentPage, $countStudent, $limit);
         $notify = isset($_COOKIE['notify']) ? strval($_COOKIE['notify']) : null;
         if ($notify !== null) {
-            $this->cookieHelper->deleteCookieToClient('notify', CookieHelper::NOTIFY_LIFETIME);
+            $this->cookieHelper->deleteCookieToClient(CookieHelper::NOTIFY_NAME, CookieHelper::NOTIFY_LIFETIME);
         }
 
         $this->view->render('home', array(

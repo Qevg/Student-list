@@ -36,7 +36,7 @@ class CSRFProtection
     public function startCsrfProtection(): void
     {
         $this->csrfToken = !empty($_COOKIE['csrf']) ? strval($_COOKIE['csrf']) : bin2hex(random_bytes(32));
-        $this->cookieHelper->setCookieToClient('csrf', $this->csrfToken, CookieHelper::CSRF_TOKEN_LIFETIME);
+        $this->cookieHelper->setCookieToClient(CookieHelper::CSRF_TOKEN_NAME, $this->csrfToken, CookieHelper::CSRF_TOKEN_LIFETIME);
     }
 
     /**
